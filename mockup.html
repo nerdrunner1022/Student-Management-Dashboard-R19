@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-slate-900 text-slate-100 flex">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-slate-800 border-r border-slate-700 p-6 flex flex-col justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-indigo-400 mb-8">Academy Core</h2>
+      <nav class="space-y-3">
+        <a href="#" class="block px-4 py-2.5 rounded-lg bg-indigo-600/20 text-indigo-400 font-medium">Dashboard</a>
+        <a href="#" class="block px-4 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200">Students</a>
+        <a href="#" class="block px-4 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200">Courses</a>
+        <a href="#" class="block px-4 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200">Settings</a>
+      </nav>
+    </div>
+    <div class="text-xs text-slate-500">v1.0.0 — System Active</div>
+  </aside>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 p-8">
+    <!-- Header Bar -->
+    <header class="flex justify-between items-center mb-8 pb-4 border-b border-slate-800">
+      <div>
+        <h1 class="text-2xl font-bold">Student Overview</h1>
+        <p class="text-sm text-slate-400">Manage active student enrollment and academic status</p>
+      </div>
+      <button class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-medium text-sm transition-colors">
+        + Add Student
+      </button>
+    </header>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Search & Cards View -->
+      <div class="lg:col-span-2 space-y-6">
+        <input 
+          type="text" 
+          placeholder="Search students by name, email, or course..." 
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Student Card Sample -->
+          <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-white">SpongeBob SquarePants</h3>
+                <p class="text-indigo-400 text-xs mt-0.5">Boating Safety</p>
+              </div>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Active</span>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-700/50 flex justify-between text-xs">
+              <span class="text-slate-400">GPA</span>
+              <span class="font-bold text-emerald-400">2.10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Registration Panel -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-fit">
+        <h3 class="font-bold text-base mb-4">Quick Actions</h3>
+        <p class="text-xs text-slate-400 mb-4">Select or register entries to update current records.</p>
+      </div>
+    </div>
+  </main>
+</div>
