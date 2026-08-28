@@ -32,15 +32,15 @@ export default function AddStudentForm({ onAddStudent }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-md">
-      <h3 className="text-lg font-bold text-white mb-4">Register New Student</h3>
-      {error && <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg text-xs mb-4">{error}</div>}
+    <form onSubmit={handleSubmit} className="rounded-xl border border-slate-300 bg-white p-6 text-black shadow-md">
+      <h3 className="mb-4 text-lg font-bold text-black">Register New Student</h3>
+      {error && <div className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-700">{error}</div>}
       <div className="space-y-4">
-        <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input type="text" placeholder="Registered Course" value={course} onChange={e => setCourse(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input type="number" step="0.1" placeholder="GPA (0.0 - 4.0)" value={gpa} onChange={e => setGpa(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors cursor-pointer">Add Student Record</button>
+        <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-[#f8f7f2] px-4 py-2.5 text-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#17324d]" />
+        <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-[#f8f7f2] px-4 py-2.5 text-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#17324d]" />
+        <input type="text" placeholder="Registered Course" value={course} onChange={e => setCourse(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-[#f8f7f2] px-4 py-2.5 text-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#17324d]" />
+        <input type="number" step="0.1" placeholder="GPA (0.0 - 4.0)" value={gpa} onChange={e => setGpa(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-[#f8f7f2] px-4 py-2.5 text-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#17324d]" />
+        <button type="submit" className="w-full rounded-lg bg-[#17324d] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#244d70]">Add Student Record</button>
       </div>
     </form>
   );
