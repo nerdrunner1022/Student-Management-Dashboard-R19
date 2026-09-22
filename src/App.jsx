@@ -1,30 +1,29 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faBookOpen, faPlus, faUserCheck, faUserClock, faUsers, faXmark } from '@fortawesome/free-solid-svg-icons';
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import AddStudentForm from "./components/AddStudentForm";
 import StudentCard from "./components/StudentCard";
+import { createStudent, deleteStudent, fetchStudents, updateStudentStatus } from "./api/studentApi";
 
-const INITIAL_STUDENTS = [
-  { id: 1, name: "SpongeBob SquarePants", email: "spongebob@boating.edu", course: "Boating Safety", gpa: 2.1, status: "Active" },
-  { id: 2, name: "Sandy Cheeks", email: "sandy@science.org", course: "Marine Biology", gpa: 4.0, status: "Active" },
-  { id: 3, name: "Squidward Tentacles", email: "squidward@clarinet.net", course: "Classical Music", gpa: 3.4, status: "Suspended" },
-  { id: 4, name: "Patrick Star", email: "patrick@rock.com", course: "Underwater Studies", gpa: 1.5, status: "Active" },
-  { id: 5, name: "Mr. Krabs", email: "mrkrabs@money.com", course: "Business Management", gpa: 3.8, status: "Active" },
-  { id: 6, name: "Plankton", email: "plankton@evil.com", course: "Chemistry", gpa: 2.8, status: "Suspended" },
-  { id: 7, name: "Mrs. Puff", email: "mrspuff@boating.edu", course: "Driver Education", gpa: 3.9, status: "Active" },
-  { id: 8, name: "Pearl Krabs", email: "pearl@money.com", course: "Marine Biology", gpa: 3.6, status: "Active" },
-  { id: 9, name: "Larry Lobster", email: "larry@fitness.edu", course: "Kinesiology", gpa: 3.2, status: "Active" },
-  { id: 10, name: "Karen Plankton", email: "karen@evil.com", course: "Computer Science", gpa: 4.0, status: "Active" },
-  { id: 11, name: "Bubble Bass", email: "bubblebass@food.edu", course: "Culinary Arts", gpa: 2.4, status: "Suspended" },
-  { id: 12, name: "Mermaid Man", email: "merman@heroism.edu", course: "Heroic Studies", gpa: 3.1, status: "Active" },
-  { id: 13, name: "Barnacle Boy", email: "barnacleboy@heroism.edu", course: "Emergency Response", gpa: 3.5, status: "Active" },
-  { id: 14, name: "Squilliam Fancyson", email: "squilliam@music.edu", course: "Classical Music", gpa: 3.9, status: "Active" }
-];
+function gpaParams(bucket) {
+  switch (bucket) {
+    case "3.5 and above":
+      return { minGpa: 3.5 };
+    case "3.0 - 3.49":
+      return { minGpa: 3.0, maxGpa: 3.5 };
+    case "Below 3.0":
+      return { maxGpa: 3.0 };
+    default:
+      return {};
+  }
+}
 
 export default function App() {
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
+  const [students, setStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [courseFilter, setCourseFilter] = useState("All courses");
   const [gpaFilter, setGpaFilter] = useState("Any GPA");
@@ -32,45 +31,114 @@ export default function App() {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isAllStudentsOpen, setIsAllStudentsOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const handleAddStudent = (newStudent) => {
-    setStudents(prevStudents => [...prevStudents, newStudent]);
-    setIsAddFormOpen(false);
+  const buildParams = useCallback(() => ({
+    q: searchTerm.trim() || undefined,
+    course: courseFilter === "All courses" ? undefined : courseFilter,
+    status: statusFilter === "Any status" ? undefined : statusFilter,
+    ...gpaParams(gpaFilter),
+  }), [searchTerm, courseFilter, gpaFilter, statusFilter]);
+
+  const refresh = useCallback(async () => {
+    try {
+      const [filtered, all] = await Promise.all([
+        fetchStudents(buildParams()),
+        fetchStudents(),
+      ]);
+      setStudents(filtered);
+      setAllStudents(all);
+      setError("");
+    } catch (err) {
+      setError(err.message || "Failed to load students.");
+    }
+  }, [buildParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const data = await fetchStudents(buildParams());
+        if (!cancelled) {
+          setStudents(data);
+          setError("");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load students.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [buildParams]);
+
+  useEffect(() => {
+    fetchStudents()
+      .then(setAllStudents)
+      .catch(err => setError(err.message || "Failed to load students."));
+  }, []);
+
+  const handleAddStudent = async (newStudent) => {
+    try {
+      await createStudent({
+        name: newStudent.name,
+        email: newStudent.email,
+        course: newStudent.course,
+        gpa: newStudent.gpa,
+        status: newStudent.status,
+      });
+      setIsAddFormOpen(false);
+      await refresh();
+      toast.success("Student added to records");
+    } catch (err) {
+      setError(err.message || "Failed to add student.");
+      toast.error(err.message || "Failed to add student.");
+    }
   };
 
-  const handleDeleteStudent = (id) => {
-    setStudents(prevStudents => prevStudents.filter(student => student.id !== id));
+  const handleDeleteStudent = async (id) => {
+    try {
+      await deleteStudent(id);
+      if (selectedStudentId === id) {
+        setSelectedStudentId(null);
+      }
+      await refresh();
+      toast.success("Student removed from records");
+    } catch (err) {
+      setError(err.message || "Failed to delete student.");
+      toast.error(err.message || "Failed to delete student.");
+    }
   };
 
-  const handleToggleStatus = (id) => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.id === id
-          ? { ...student, status: student.status === "Active" ? "Suspended" : "Active" }
-          : student
-      )
-    );
+  const handleToggleStatus = async (id) => {
+    const student = students.find(s => s.id === id) ?? allStudents.find(s => s.id === id);
+    if (!student) return;
+    const target = student.status === "Active" ? "Suspended" : "Active";
+    try {
+      await updateStudentStatus(id, target);
+      await refresh();
+      toast.success(`Student ${target}`);
+    } catch (err) {
+      setError(err.message || "Failed to update status.");
+      toast.error(err.message || "Failed to update status.");
+    }
   };
 
-  const courses = [...new Set(students.map(student => student.course))].sort();
-  const filteredStudents = students.filter(student => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.course.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCourse = courseFilter === "All courses" || student.course === courseFilter;
-    const matchesStatus = statusFilter === "Any status" || student.status === statusFilter;
-    const matchesGpa =
-      gpaFilter === "Any GPA" ||
-      (gpaFilter === "3.5 and above" && student.gpa >= 3.5) ||
-      (gpaFilter === "3.0 - 3.49" && student.gpa >= 3.0 && student.gpa < 3.5) ||
-      (gpaFilter === "Below 3.0" && student.gpa < 3.0);
-
-    return matchesSearch && matchesCourse && matchesStatus && matchesGpa;
-  });
+  const courses = [...new Set(allStudents.map(student => student.course))].sort();
+  const filteredStudents = students;
   const previewStudents = filteredStudents.slice(0, 6);
   const selectedStudent = filteredStudents.find(student => student.id === selectedStudentId);
-  const activeStudents = students.filter(student => student.status === "Active").length;
-  const suspendedStudents = students.filter(student => student.status === "Suspended").length;
+  const activeStudents = allStudents.filter(student => student.status === "Active").length;
+  const suspendedStudents = allStudents.filter(student => student.status === "Suspended").length;
 
   const renderStudentCard = (student) => (
     <StudentCard
@@ -85,6 +153,11 @@ export default function App() {
     <div className="min-h-screen bg-[#f8f7f2] text-black antialiased pb-12">
       <Header />
       <main className="box-border flex-1 w-full px-4 py-8 sm:px-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           <select
@@ -132,7 +205,7 @@ export default function App() {
               <span className="text-sm font-semibold">Total students</span>
               <FontAwesomeIcon icon={faUsers} aria-hidden="true" />
             </div>
-            <p className="mt-3 text-3xl font-bold text-black">{students.length}</p>
+            <p className="mt-3 text-3xl font-bold text-black">{allStudents.length}</p>
           </div>
           <div className="rounded-xl border border-green-200 bg-green-50 p-5 shadow-sm">
             <div className="flex items-center justify-between text-green-700">
@@ -156,7 +229,11 @@ export default function App() {
             <p className="mt-3 text-3xl font-bold text-black">{courses.length}</p>
           </div>
         </div>
-        {filteredStudents.length === 0 ? (
+        {loading && filteredStudents.length === 0 ? (
+          <div className="rounded-xl border border-slate-300 bg-white p-12 text-center">
+            <p className="text-sm text-black">Loading students...</p>
+          </div>
+        ) : filteredStudents.length === 0 ? (
           <div className="rounded-xl border border-slate-300 bg-white p-12 text-center">
             <p className="text-sm text-black">No student records match your query.</p>
           </div>

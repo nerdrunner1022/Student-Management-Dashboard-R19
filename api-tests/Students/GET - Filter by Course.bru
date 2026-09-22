@@ -1,0 +1,20 @@
+meta {
+  name: GET - Filter by Course
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/students?course=Marine%20Biology
+  body: none
+  auth: none
+}
+
+tests {
+  assert(res.status === 200, "Expected 200 OK");
+  const students = res.getBody();
+  assert(students.length >= 2, "Expected at least 2 Marine Biology students");
+  for (const student of students) {
+    assert(student.course === "Marine Biology", "All results match the course filter");
+  }
+}

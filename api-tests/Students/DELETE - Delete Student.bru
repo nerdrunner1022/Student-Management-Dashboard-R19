@@ -1,0 +1,15 @@
+meta {
+  name: DELETE - Delete Student
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/students/{{newStudentId}}
+  body: none
+  auth: none
+}
+
+tests {
+  assert(res.status === 204, "Expected 204 No Content");
+}

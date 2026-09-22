@@ -1,0 +1,134 @@
+/* Custom styling for react-toastify matching the Student Management Dashboard design language */
+
+:root {
+  --toastify-color-light: #ffffff;
+  --toastify-toast-width: 360px;
+  --toastify-toast-bd-radius: 0.75rem; /* 12px (rounded-xl) */
+  --toastify-font-family: var(--sans, system-ui, 'Segoe UI', Roboto, sans-serif);
+  --toastify-z-index: 9999;
+}
+
+.Toastify__toast-container {
+  padding: 0;
+  width: var(--toastify-toast-width);
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+  z-index: 9999;
+}
+
+.Toastify__toast-container--top-right {
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.Toastify__toast {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px -2px rgba(23, 50, 77, 0.12), 0 2px 6px -2px rgba(23, 50, 77, 0.08);
+  font-family: var(--sans, system-ui, 'Segoe UI', Roboto, sans-serif);
+  padding: 14px 16px;
+  min-height: 60px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  color: #000;
+  overflow: hidden;
+}
+
+/* Status-specific card borders */
+.Toastify__toast--success {
+  border-color: #bbf7d0; /* green-200 */
+}
+
+.Toastify__toast--error {
+  border-color: #fecaca; /* red-200 */
+}
+
+.Toastify__toast--info {
+  border-color: #cbd5e1; /* slate-300 */
+}
+
+.Toastify__toast--warning {
+  border-color: #fed7aa; /* amber-200 */
+}
+
+.Toastify__toast-body {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.Toastify__toast-icon {
+  margin-inline-end: 12px;
+  width: auto;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Custom progress bar */
+.Toastify__progress-bar {
+  height: 3px;
+  bottom: 0;
+  left: 0;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  opacity: 0.9;
+}
+
+.Toastify__progress-bar--success {
+  background: #16a34a; /* green-600 */
+}
+
+.Toastify__progress-bar--error {
+  background: #dc2626; /* red-600 */
+}
+
+.Toastify__progress-bar--info {
+  background: #17324d; /* primary navy */
+}
+
+.Toastify__progress-bar--warning {
+  background: #d97706; /* amber-600 */
+}
+
+.Toastify__progress-bar--bg {
+  background: rgba(23, 50, 77, 0.06);
+}
+
+/* Close button matching the app's modal and search clear buttons */
+.Toastify__close-button {
+  align-self: center;
+  opacity: 0.6;
+  color: #64748b;
+  transition: all 0.2s ease;
+  padding: 4px;
+}
+
+.Toastify__close-button:hover,
+.Toastify__close-button:focus {
+  opacity: 1;
+  color: #000;
+}
+
+@media only screen and (max-width: 480px) {
+  .Toastify__toast-container--top-right,
+  .Toastify__toast-container {
+    width: calc(100vw - 2rem);
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    margin: 0 auto;
+  }
+  .Toastify__toast {
+    width: 100%;
+    border-radius: 0.75rem;
+  }
+}

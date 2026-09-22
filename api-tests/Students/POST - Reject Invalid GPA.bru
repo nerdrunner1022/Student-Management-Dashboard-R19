@@ -1,0 +1,24 @@
+meta {
+  name: POST - Reject Invalid GPA
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/students
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Bad GPA",
+    "email": "bad@example.edu",
+    "course": "Testing",
+    "gpa": 9
+  }
+}
+
+tests {
+  assert(res.status === 400, "Expected 400 Bad Request for an out-of-range GPA");
+}

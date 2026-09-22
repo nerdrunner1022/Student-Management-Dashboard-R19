@@ -1,0 +1,18 @@
+meta {
+  name: GET - List Students
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/students
+  body: none
+  auth: none
+}
+
+tests {
+  assert(res.status === 200, "Expected 200 OK");
+  const students = res.getBody();
+  assert(Array.isArray(students), "Response should be an array");
+  assert(students.length >= 14, "Expected at least 14 seeded students");
+}
