@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Backend runtime data
 backend/data
@@ -25,3 +26,5 @@ backend/data
 *.njsproj
 *.sln
 *.sw?
+.neon
+backend/*.tsbuildinfo

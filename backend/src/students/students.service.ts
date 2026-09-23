@@ -16,7 +16,7 @@ export class StudentsService {
     const queryBuilder = this.studentsRepository.createQueryBuilder('student');
 
     if (query.q) {
-      queryBuilder.andWhere('(student.name LIKE :q OR student.course LIKE :q)', {
+      queryBuilder.andWhere('(student.name ILIKE :q OR student.course ILIKE :q)', {
         q: `%${query.q}%`,
       });
     }

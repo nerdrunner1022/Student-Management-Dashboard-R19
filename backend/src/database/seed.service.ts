@@ -17,6 +17,9 @@ export class SeedService implements OnApplicationBootstrap {
     if (SEED_STUDENTS.length === 0) {
       return;
     }
+    if (process.env.RESET_DB === 'true') {
+      await this.studentsRepository.clear();
+    }
     const count = await this.studentsRepository.count();
     if (count > 0) {
       return;

@@ -8,7 +8,12 @@ describe('Students API (e2e)', () => {
   let createdId: number;
 
   beforeAll(async () => {
-    process.env.DB_PATH = ':memory:';
+    const testUrl = process.env.DATABASE_URL_TEST;
+    if (!testUrl) {
+      throw new Error('DATABASE_URL_TEST is not set. Run `npm run test:e2e` (loads ../.env.local) or export it.');
+    }
+    process.env.DATABASE_URL = testUrl;
+    process.env.RESET_DB = 'true';
     const { AppModule } = await import('../src/app.module.js');
 
     const moduleRef: TestingModule = await Test.createTestingModule({

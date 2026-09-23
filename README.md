@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-Student Management Dashboard is a full-stack application for viewing and managing student records. It combines a React frontend with a NestJS REST API backed by a persistent SQLite database.
+Student Management Dashboard is a full-stack application for viewing and managing student records. It combines a React frontend with a NestJS REST API backed by a hosted PostgreSQL (Neon) database.
 
-Users can search students by name or course, narrow results with course, status, and GPA filters, expand a record to view its email address, toggle a student's active or suspended status, add a new student, and delete an existing record. Every mutation is confirmed with a toast notification, and all changes are written to disk so they survive page refreshes and server restarts.
+Users can search students by name or course, narrow results with course, status, and GPA filters, expand a record to view its email address, toggle a student's active or suspended status, add a new student, and delete an existing record. Every mutation is confirmed with a toast notification, and all changes are saved to a hosted Postgres database so they survive page refreshes, server restarts, and redeploys.
 
 ## Features
 
@@ -14,7 +14,7 @@ Users can search students by name or course, narrow results with course, status,
 - Dashboard stat cards (total, active, suspended, course count)
 - Add new students with client- and server-side validation
 - Success/error toast notifications for every mutation
-- Persistent storage in a SQLite file with automatic seeding on first boot
+- Persistent storage in a hosted PostgreSQL (Neon) database with automatic seeding on first boot
 
 ## Architecture
 
@@ -23,7 +23,7 @@ The project is split into three areas:
 | Directory | Purpose |
 | --- | --- |
 | `./` (root) | React 19 + Vite 8 frontend |
-| `./backend/` | NestJS 12 REST API + TypeORM/SQLite persistence |
+| `./backend/` | NestJS 12 REST API + TypeORM/PostgreSQL persistence (Neon) |
 | `./api-tests/` | Bruno API testing collection (`.bru` files) |
 
 The frontend calls the API through relative `/api/...` URLs. In development, Vite proxies those to the backend at `http://localhost:3000`.
@@ -42,8 +42,8 @@ The frontend calls the API through relative `/api/...` URLs. In development, Vit
 
 **Backend**
 - NestJS 12 for the API and module structure
-- TypeORM with the `better-sqlite3` driver for persistence
-- SQLite as the database
+- TypeORM with the `pg` driver for persistence
+- PostgreSQL as the database, hosted on Neon (free serverless tier)
 - class-validator / class-transformer for request validation
 - oxlint for code-quality checks
 - Vitest + supertest for unit and end-to-end tests
@@ -53,16 +53,25 @@ The frontend calls the API through relative `/api/...` URLs. In development, Vit
 
 - Node.js 20 or newer (developed and tested on Node 24)
 - npm 10+
+- A Neon account (free tier) — https://neon.tech
 
-### First-time install gotcha (better-sqlite3)
+### Neon database setup
 
-`better-sqlite3` ships a native binary. npm's newer script-allowlist policy may block its build step. If you hit a `Could not locate the bindings file` error when starting the backend, run:
+The backend connects to a hosted PostgreSQL database on Neon. After signing up and creating a project, link the CLI from the repository root — this writes `.env.local` (gitignored) with `DATABASE_URL`:
 
 ```bash
-cd backend
-npm install-scripts approve better-sqlite3
-npm rebuild better-sqlite3
+npm i -g neon@latest
+neon login
+neon link --project-id <your-project-id> --branch production -y
 ```
+
+Create a separate database for end-to-end tests, then add its connection URL to `.env.local` as `DATABASE_URL_TEST` (same host and credentials as `DATABASE_URL`, with the database name `student-dashboard-test`):
+
+```bash
+neon databases create --branch production --name student-dashboard-test
+```
+
+The backend reads `DATABASE_URL` from `.env.local` automatically (see `app.module.ts`).
 
 ## Running the Project
 
@@ -76,7 +85,7 @@ npm install
 npm run start:dev
 ```
 
-The server starts on **http://localhost:3000**. On its first boot it creates the database and seeds it with the 14 original records — look for:
+The server starts on **http://localhost:3000**. It reads `DATABASE_URL` from the repo-root `.env.local` file created by `neon link`. On its first boot it creates the schema and seeds the 14 original records — look for:
 
 ```
 [Nest] ... [SeedService] Seeded database with 14 students.
@@ -169,7 +178,7 @@ Requests are validated by a global `ValidationPipe` using `class-validator` DTOs
 | `npm run build` | Compile the NestJS app (`nest build`) |
 | `npm run lint` | oxlint type-aware lint |
 | `npm test` | Vitest unit tests |
-| `npm run test:e2e` | Vitest + supertest end-to-end tests (in-memory DB) |
+| `npm run test:e2e` | Vitest + supertest end-to-end tests (Neon test DB, `DATABASE_URL_TEST`) |
 | `npm run test:api` | Headless Bruno run against a running server |
 
 ## Testing
@@ -177,7 +186,7 @@ Requests are validated by a global `ValidationPipe` using `class-validator` DTOs
 Three tiers of automated testing are included:
 
 1. **Unit** — `npm test` (in `backend/`): validates the seed data shape.
-2. **End-to-end** — `npm run test:e2e` (in `backend/`): boots the Nest app against an in-memory SQLite database and exercises all endpoints with supertest (CRUD, filtering, validation errors, 404s). 11 tests.
+2. **End-to-end** — `npm run test:e2e` (in `backend/`): boots the Nest app against a dedicated Neon test database (`student-dashboard-test`), resets the table before seeding (`RESET_DB=true`), and exercises all endpoints with supertest (CRUD, filtering, validation errors, 404s). 11 tests.
 3. **API** — `npm run test:api` (in `backend/`, server must be running): runs the Bruno collection headlessly, 7 requests, all asserting on status codes and response bodies.
 
 Frontend lint (`npm run lint`) and build (`npm run build`) run from the repository root.
@@ -206,13 +215,43 @@ Expected summary: `Status: ✓ PASS` with `Requests: 7 (7 Passed)`.
 
 ## Persistence
 
-All changes are written to `backend/data/students.sqlite` (gitignored). To verify persistence for yourself:
+All records live in a hosted PostgreSQL database on Neon. The `DATABASE_URL` in the repo-root `.env.local` (pulled by `neon link`) points at it. Because the database is remote, data survives local restarts, redeploys, and moving machines. On first boot against an empty database the app creates the schema (`synchronize: true`) and seeds the 14 original records.
 
-1. Add a student in the browser.
-2. Stop the backend (`Ctrl+C`) and restart `npm run start:dev`.
-3. Refresh the browser — the student you added is still there.
+To reset to the original 14 records, empty the `students` table (or point `DATABASE_URL` at a fresh database) and restart — the app recreates and reseeds the database.
 
-To reset to the original 14 records, stop the backend, delete `backend/data/students.sqlite`, and restart — the app recreates and reseeds the database.
+## Deployment
+
+The app is deployed as two services plus a hosted database:
+
+| Service | Host | What runs |
+| --- | --- | --- |
+| Frontend | Netlify | Static `dist/` from `npm run build` |
+| Backend | Render | NestJS web service (root dir `backend`) |
+| Database | Neon | PostgreSQL (free serverless tier) |
+
+The frontend calls the API through relative `/api/...` URLs. `netlify.toml` rewrites `/api/*` to the backend's Render URL (status-200 proxy, so no CORS is needed) and falls back every other route to `index.html` for the SPA.
+
+### Backend (Render)
+
+1. Create a new Web Service and connect the repository.
+2. Set **Root Directory** to `backend`.
+3. Build command: `npm ci && npm run build`.
+4. Start command: `npm run start:prod`.
+5. Add environment variables: `DATABASE_URL=<your Neon pooled URL>` (and `RESET_DB=false`).
+6. On first deploy, the empty database is auto-created and seeded with the 14 records.
+
+### Frontend (Netlify)
+
+1. Create (or reconnect) a site from the repository.
+2. Netlify reads `netlify.toml` — build `npm ci && npm run build`, publish `dist/`.
+3. In `netlify.toml`, set the `to` value of the `/api/*` redirect to your backend's Render URL.
+4. Keep the `/api/*` proxy redirect **before** the SPA fallback (`/*`).
+5. Deploy from `main` (merge `full-stack` into `main` via a pull request once the backend is live).
+
+### Notes
+
+- The Render free tier sleeps after inactivity; the first request after a sleep can take tens of seconds.
+- Keep the e2e tests pointed at `student-dashboard-test` so they never touch production data.
 
 ## Project Structure
 
@@ -224,12 +263,13 @@ student-dashboard/
 │   ├── components/           # Header, SearchBar, AddStudentForm, StudentCard, ToastNotification
 │   └── styles/toast.css      # toast theming (design-language overrides)
 ├── backend/                  # NestJS API
-│   ├── data/                 # students.sqlite (gitignored, auto-created)
 │   └── src/
-│       ├── database/         # seed-data.ts + seed.service.ts
+│       ├── database/         # seed-data.ts + seed.service.ts (RESET_DB-aware)
 │       ├── students/         # entity, DTOs, controller, service, module
 │       └── main.ts           # prefix /api, ValidationPipe, CORS
 ├── api-tests/                # Bruno collection (.bru files + environment)
+├── .env.local                # Neon connection URLs (gitignored, from `neon link`)
+├── neon.ts                   # Neon policy config
 ├── vite.config.js            # dev proxy /api -> localhost:3000
 └── README.md
 ```
@@ -274,7 +314,7 @@ student-dashboard/
 
 - There is no authentication or authorization — an administrator account is assumed.
 - No pagination: the API returns complete result sets. Fine for tutorial data, not for large datasets.
-- Search uses a simple case-insensitive `LIKE` match, not full-text or fuzzy matching.
+- Search uses a simple case-insensitive `ILIKE` match, not full-text or fuzzy matching.
 - `maxGpa` is an exclusive bound (deliberate, to keep the "3.0 – 3.49" bucket non-overlapping).
 - TypeORM runs with `synchronize: true`, which auto-creates the schema in development; a migration workflow should replace it for production.
 - There are no automated frontend (component) tests yet.
