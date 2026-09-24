@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://student-dashboard-api.vercel.app/api/:splat"
+  to = "https://student-management-dashboard-r19.vercel.app/api/:splat"
   status = 200
   force = true
 
