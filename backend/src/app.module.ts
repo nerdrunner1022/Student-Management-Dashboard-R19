@@ -18,6 +18,7 @@ import { StudentsModule } from './students/students.module.js';
         url: config.get<string>('DATABASE_URL'),
         entities: [Student],
         synchronize: true,
+        extra: { max: 5 },
       }),
     }),
     TypeOrmModule.forFeature([Student]),

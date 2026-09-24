@@ -226,38 +226,37 @@ The app is deployed as two services plus a hosted database:
 | Service | Host | What runs |
 | --- | --- | --- |
 | Frontend | Netlify | Static `dist/` from `npm run build` |
-| Backend | Koyeb | NestJS web service (buildpack, workdir `backend`) |
+| Backend | Vercel | NestJS API on Vercel Functions (zero config) |
 | Database | Neon | PostgreSQL (free serverless tier) |
 
-The frontend calls the API through relative `/api/...` URLs. `netlify.toml` rewrites `/api/*` to the backend's Koyeb URL (status-200 proxy, so no CORS is needed) and falls back every other route to `index.html` for the SPA.
+The frontend calls the API through relative `/api/...` URLs. `netlify.toml` rewrites `/api/*` to the backend's Vercel URL (status-200 proxy, so no CORS is needed) and falls back every other route to `index.html` for the SPA.
 
-You can deploy the backend to Koyeb in one click:
+You can deploy the backend to Vercel in one click:
 
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/nerdrunner1022/Student-Management-Dashboard-R19&branch=full-stack&name=student-dashboard-api&workdir=backend&ports=3000;http;/&routes=/;3000&run_command=npm%20run%20start:prod&env%5BPORT%5D=3000&env%5BRESET_DB%5D=false)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnerdrunner1022%2FStudent-Management-Dashboard-R19&project-name=student-dashboard-api&root-directory=backend&branch=full-stack&env=DATABASE_URL&env=RESET_DB)
 
-### Backend (Koyeb)
+### Backend (Vercel)
 
-1. Create a new Web Service and connect the repository (pick the `full-stack` branch).
-2. Set **Work directory** to `backend`.
-3. Builder: **buildpack** (auto-detects Node.js; the `dist` build is run automatically).
-4. Expose **port `3000`** with HTTP; route `/ → :3000`.
-5. Add environment variables: `PORT=3000`, `DATABASE_URL=<your Neon pooled URL>`, and `RESET_DB=false`.
-6. On first deploy, the empty database is auto-created and seeded with the 14 records.
-7. Pushes to the deployed branch trigger an automatic redeploy.
+1. Create a new project on Vercel and import the repository (pick the `full-stack` branch).
+2. Set **Root Directory** to `backend`.
+3. Vercel auto-detects NestJS with **zero configuration** — no build command or output directory to set.
+4. Add environment variables: `DATABASE_URL=<your Neon pooled URL>` and `RESET_DB=false`.
+5. Deploy. The app runs as a single Vercel Function (Fluid compute); on its first invocation the empty database is auto-created and seeded with the 14 records.
+6. Pushes to the linked branch trigger preview and production deploys; the dashboard adds preview URLs and instant rollback.
 
-> Don't set `NODE_ENV=production` on Koyeb — the buildpack prunes `devDependencies` after the build step, which can break redeploys.
+> The backend is a single stateless function — keep all state in Neon (don't rely on in-memory data between requests). By default functions run in `iad1` (Washington, D.C.); to run closer to the Neon cluster (ap-southeast-1), set `"regions": ["sin1"]` in a `backend/vercel.json`.
 
 ### Frontend (Netlify)
 
 1. Create (or reconnect) a site from the repository.
 2. Netlify reads `netlify.toml` — build `npm ci && npm run build`, publish `dist/`.
-3. In `netlify.toml`, set the `to` value of the `/api/*` redirect to your backend's Koyeb URL.
+3. In `netlify.toml`, set the `to` value of the `/api/*` redirect to your backend's Vercel URL.
 4. Keep the `/api/*` proxy redirect **before** the SPA fallback (`/*`).
 5. Deploy from `main` (merge `full-stack` into `main` via a pull request once the backend is live).
 
 ### Notes
 
-- The Koyeb free tier scales to zero after roughly an hour without traffic; the first request after that can take tens of seconds to wake the instance.
+- The Vercel Hobby plan is free but has monthly usage caps (1M function invocations, 4 CPU-hours Active CPU, 360 GB-hours provisioned memory); the project pauses if you exceed them and resumes the next cycle.
 - Keep the e2e tests pointed at `student-dashboard-test` so they never touch production data.
 
 ## Project Structure
