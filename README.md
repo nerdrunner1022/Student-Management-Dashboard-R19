@@ -226,31 +226,38 @@ The app is deployed as two services plus a hosted database:
 | Service | Host | What runs |
 | --- | --- | --- |
 | Frontend | Netlify | Static `dist/` from `npm run build` |
-| Backend | Render | NestJS web service (root dir `backend`) |
+| Backend | Koyeb | NestJS web service (buildpack, workdir `backend`) |
 | Database | Neon | PostgreSQL (free serverless tier) |
 
-The frontend calls the API through relative `/api/...` URLs. `netlify.toml` rewrites `/api/*` to the backend's Render URL (status-200 proxy, so no CORS is needed) and falls back every other route to `index.html` for the SPA.
+The frontend calls the API through relative `/api/...` URLs. `netlify.toml` rewrites `/api/*` to the backend's Koyeb URL (status-200 proxy, so no CORS is needed) and falls back every other route to `index.html` for the SPA.
 
-### Backend (Render)
+You can deploy the backend to Koyeb in one click:
 
-1. Create a new Web Service and connect the repository.
-2. Set **Root Directory** to `backend`.
-3. Build command: `npm ci && npm run build`.
-4. Start command: `npm run start:prod`.
-5. Add environment variables: `DATABASE_URL=<your Neon pooled URL>` (and `RESET_DB=false`).
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/nerdrunner1022/Student-Management-Dashboard-R19&branch=full-stack&name=student-dashboard-api&workdir=backend&ports=3000;http;/&routes=/;3000&run_command=npm%20run%20start:prod&env%5BPORT%5D=3000&env%5BRESET_DB%5D=false)
+
+### Backend (Koyeb)
+
+1. Create a new Web Service and connect the repository (pick the `full-stack` branch).
+2. Set **Work directory** to `backend`.
+3. Builder: **buildpack** (auto-detects Node.js; the `dist` build is run automatically).
+4. Expose **port `3000`** with HTTP; route `/ → :3000`.
+5. Add environment variables: `PORT=3000`, `DATABASE_URL=<your Neon pooled URL>`, and `RESET_DB=false`.
 6. On first deploy, the empty database is auto-created and seeded with the 14 records.
+7. Pushes to the deployed branch trigger an automatic redeploy.
+
+> Don't set `NODE_ENV=production` on Koyeb — the buildpack prunes `devDependencies` after the build step, which can break redeploys.
 
 ### Frontend (Netlify)
 
 1. Create (or reconnect) a site from the repository.
 2. Netlify reads `netlify.toml` — build `npm ci && npm run build`, publish `dist/`.
-3. In `netlify.toml`, set the `to` value of the `/api/*` redirect to your backend's Render URL.
+3. In `netlify.toml`, set the `to` value of the `/api/*` redirect to your backend's Koyeb URL.
 4. Keep the `/api/*` proxy redirect **before** the SPA fallback (`/*`).
 5. Deploy from `main` (merge `full-stack` into `main` via a pull request once the backend is live).
 
 ### Notes
 
-- The Render free tier sleeps after inactivity; the first request after a sleep can take tens of seconds.
+- The Koyeb free tier scales to zero after roughly an hour without traffic; the first request after that can take tens of seconds to wake the instance.
 - Keep the e2e tests pointed at `student-dashboard-test` so they never touch production data.
 
 ## Project Structure
