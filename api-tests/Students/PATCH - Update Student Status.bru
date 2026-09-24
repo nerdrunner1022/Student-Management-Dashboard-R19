@@ -1,0 +1,22 @@
+meta {
+  name: PATCH - Update Student Status
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/students/{{newStudentId}}/status
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "status": "Suspended"
+  }
+}
+
+tests {
+  assert(res.status === 200, "Expected 200 OK");
+  assert(res.getBody().status === "Suspended", "Status updated to Suspended");
+}

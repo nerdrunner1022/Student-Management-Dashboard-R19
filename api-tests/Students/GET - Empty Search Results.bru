@@ -1,0 +1,17 @@
+meta {
+  name: GET - Empty Search Results
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/students?q=zzznomatch
+  body: none
+  auth: none
+}
+
+tests {
+  assert(res.status === 200, "Expected 200 OK");
+  assert(Array.isArray(res.getBody()), "Response should be an array");
+  assert(res.getBody().length === 0, "Expected no matching results");
+}

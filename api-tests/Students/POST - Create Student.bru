@@ -1,0 +1,29 @@
+meta {
+  name: POST - Create Student
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/students
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Bruno Tester",
+    "email": "bruno@example.edu",
+    "course": "API Testing",
+    "gpa": 3.7
+  }
+}
+
+tests {
+  assert(res.status === 201, "Expected 201 Created");
+  const student = res.getBody();
+  assert(student.name === "Bruno Tester", "Name echoed back");
+  assert(student.status === "Active", "Default status is Active");
+  assert(typeof student.id === "number", "Server assigned an id");
+  bru.setVar("newStudentId", student.id);
+}

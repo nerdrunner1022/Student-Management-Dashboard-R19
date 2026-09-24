@@ -13,10 +13,13 @@
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@fortawesome/react-fontawesome": "^3.5.0",
+    "@neon/config": "^1.7.2",
+    "@neon/env": "^1.4.3",
     "@tailwindcss/vite": "^4.3.3",
     "prop-types": "^15.8.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-toastify": "^11.1.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
